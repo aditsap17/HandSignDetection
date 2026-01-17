@@ -5,18 +5,16 @@ import math
 import time
 import os
 
-# ================== SETUP ==================
 cap = cv2.VideoCapture(0)
 detector = HandDetector(maxHands=1)
 
 offset = 20
 imgSize = 300
 
-folder = "data/B"
+folder = "data/S"
 os.makedirs(folder, exist_ok=True)
 counter = 0
 
-# ================== UI FUNCTION ==================
 def drawUI(frame, counter):
     ui = np.zeros((120, frame.shape[1], 3), dtype=np.uint8)
 
@@ -31,20 +29,22 @@ def drawUI(frame, counter):
 
     return ui
 
-# ================== LOOP ==================
 while True:
     success, img = cap.read()
     if not success:
         continue
 
-    hands, img = detector.findHands(img)
+    hands, _ = detector.findHands(img, draw=False)
 
-    # ================== HAND PROCESS ==================
     imgWhite = None
 
     if hands:
         hand = hands[0]
         x, y, w, h = hand['bbox']
+
+        cv2.rectangle(img, (x - offset, y - offset),
+                      (x + w + offset, y + h + offset),
+                      (0, 255, 0), 2)
 
         imgWhite = np.ones((imgSize, imgSize, 3), np.uint8) * 255
 
@@ -72,11 +72,9 @@ while True:
                 hGap = math.ceil((imgSize - hCal) / 2)
                 imgWhite[hGap:hGap + hCal, :] = imgResize
 
-            # Tampilkan preview kecil di frame utama
             preview = cv2.resize(imgWhite, (150, 150))
             img[20:170, img.shape[1]-170:img.shape[1]-20] = preview
 
-    # ================== COMPOSE UI ==================
     uiPanel = drawUI(img, counter)
     finalView = np.vstack((uiPanel, img))
 
@@ -84,16 +82,13 @@ while True:
 
     key = cv2.waitKey(1)
 
-    # ================== SAVE ==================
     if key == ord("s") and imgWhite is not None:
         counter += 1
         cv2.imwrite(f"{folder}/Image_{time.time()}.jpg", imgWhite)
         print("Saved:", counter)
 
-    # ================== EXIT ==================
     if key == ord("q"):
         break
 
-# ================== CLEANUP ==================
 cap.release()
 cv2.destroyAllWindows()

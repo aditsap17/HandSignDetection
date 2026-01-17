@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Sign Language Detection</title>
+    <link rel="stylesheet" href="/static/css/style.css" />
+  </head>
+
+  <body>
+    <header class="navbar">
+      <h1>SIGN LANGUAGE DETECTION</h1>
+      <p>Project Akhir Semester 3</p>
+    </header>
+
+    <main class="container">
+      <section class="camera-box">
+        <h2>Live Camera</h2>
+
+        <div class="camera-frame">
+          <img src="/video" class="video" />
+          <img src="/static/sibi/abjad.png" class="abjad" />
+        </div>
+
+        <div class="buttons">
+          <button onclick="toggleCamera()">CAMERA (C)</button>
+          <button onclick="saveChar()">SAVE (S)</button>
+          <button onclick="addSpace()">SPACE</button>
+          <button class="danger" onclick="backspace()">BACKSPACE</button>
+          <button class="danger" onclick="clearAll()">HAPUS (DEL)</button>
+        </div>
+      </section>
+
+      <section class="result-box">
+        <h2>Hasil Deteksi</h2>
+
+        <div class="result-card">
+          <span class="label">Huruf Terdeteksi</span>
+          <div id="char" class="result-value">-</div>
+          <div id="confidence">Confidence: 0%</div>
+        </div>
+
+        <div class="history-box">
+          <h3>Kalimat</h3>
+          <p id="history">-</p>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      function toggleCamera() {
+        fetch("/camera", { method: "POST" });
+      }
+      function saveChar() {
+        fetch("/save", { method: "POST" });
+      }
+      function addSpace() {
+        fetch("/space", { method: "POST" });
+      }
+      function backspace() {
+        fetch("/backspace", { method: "POST" });
+      }
+      function clearAll() {
+        fetch("/clear", { method: "POST" });
+      }
+
+      document.addEventListener("keydown", function (e) {
+        if (e.key.toLowerCase() === "c") toggleCamera();
+        if (e.key.toLowerCase() === "s") saveChar();
+        if (e.key === " ") addSpace();
+        if (e.key === "Backspace") backspace();
+        if (e.key === "Delete") clearAll();
+      });
+
+      setInterval(() => {
+        fetch("/prediction")
+          .then((res) => res.json())
+          .then((data) => {
+            document.getElementById("char").innerText = data.char || "-";
+            document.getElementById("confidence").innerText =
+              "Confidence: " + (data.confidence || 0) + "%";
+            document.getElementById("history").innerText = data.history || "-";
+          });
+      }, 300);
+    </script>
+  </body>
+</html>
